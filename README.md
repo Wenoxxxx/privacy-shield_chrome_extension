@@ -23,29 +23,29 @@ Click "Load unpacked" and select the directory where you cloned this repository.
 
 The Privacy Shield extension should now be installed and visible in your Chrome toolbar.
 
-Usage
+## Usage
 Click on the Privacy Shield icon in the Chrome toolbar to view your real-time privacy score.
 Use the "View Details" button to see more information about how the current website is handling your privacy.
 Click on "Settings" to adjust your privacy preferences and configure how the extension protects you.
+
 File Structure
-bash
-Copy code
+privacy-shield/
 privacy-shield/
 │
 ├── css/
-│   └── styles.css            # CSS for the popup interface
+│ └── styles.css # CSS for the popup interface
 │
 ├── js/
-│   └── popup.js              # JavaScript for the popup interface
+│ └── popup.js # JavaScript for the popup interface
 │
 ├── assets/
-│   ├── icon.png              # 500x500 icon for the extension
-│   ├── icon48.png            # 48x48 icon for the extension
-│   └── icon128.png           # 128x128 icon for the extension
+│ ├── icon.png # 500x500 icon for the extension
+│ ├── icon48.png # 48x48 icon for the extension
+│ └── icon128.png # 128x128 icon for the extension
 │
-├── manifest.json             # Chrome extension manifest file
-├── popup.html                # HTML for the popup interface
-└── README.md                 # Project documentation
+├── manifest.json # Chrome extension manifest file
+├── popup.html # HTML for the popup interface
+└── README.md # Project documentation
 
 ## Development
 
