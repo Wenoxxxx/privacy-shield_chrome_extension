@@ -12,32 +12,44 @@
 <body>
     
     <div class="container">
-
-        <header>
-            <div class="icon">
-                <img src="/assets/icon48.png" alt="">
-            </div>
-            <h1>Privacy Shield</h1>
-        </header>
-
-        <!-- FOR CIRCLE PROGRESS BAR -->
-        <div class="score-container">
-            <span class="circle-label">Privacy Score</span>
-            <div class="circle-progress-container">
-                <svg class="circle-progress" width="120" height="120">
-                <circle class="circle-bg" cx="60" cy="60" r="54" />
-                <circle class="circle-bar" cx="60" cy="60" r="54" />
-                </svg>
-
-                <div class="circle-score">
-                <span id="privacy-score">100</span>
+        <div id="main-view" class="popup-view">
+            <header>
+                <div class="icon">
+                    <img src="/assets/icon48.png" alt="">
                 </div>
+                <h1>Privacy Shield</h1>
+            </header>
+            <!-- FOR CIRCLE PROGRESS BAR -->
+            <div class="score-container">
+                <span class="circle-label">Privacy Score</span>
+                <div class="circle-progress-container">
+                    <svg class="circle-progress" width="120" height="120">
+                    <circle class="circle-bg" cx="60" cy="60" r="54" />
+                    <circle class="circle-bar" cx="60" cy="60" r="54" />
+                    </svg>
+                    <div class="circle-score">
+                    <span id="privacy-score">100</span>
+                    </div>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="button primary" id="view-details-btn">VIEW DETAILS</button>
+                <button class="button secondary" id="settings-btn">SETTINGS</button>
             </div>
         </div>
 
-        <div class="actions">
-            <button class="button primary">VIEW DETAILS</button>
-            <button class="button secondary">SETTINGS</button>
+        <!-- DETAILS VIEW -->
+        <div id="details-view" class="popup-view hidden">
+            <button class="button" id="back-from-details">&larr; Back</button>
+            <h2>Details</h2>
+            <div id="details-content">No details available.</div>
+        </div>
+
+        <!-- SETTINGS VIEW -->
+        <div id="settings-view" class="popup-view hidden">
+            <button class="button" id="back-from-settings">&larr; Back</button>
+            <h2>Settings</h2>
+            <div id="settings-content">No settings available.</div>
         </div>
     </div>
     <script src="./js/popup.js"></script>
