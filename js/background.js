@@ -69,9 +69,31 @@ chrome.declarativeNetRequest.updateDynamicRules({
   removeRuleIds: rules.map(rule => rule.id)
 });
 
-// --- Logging Functionality ---
+// 1. WebRTC IP Handling Policy (Network-level protection)
+function updateWebRTCPolicy() {
+  chrome.storage.sync.get(['webrtc'], function (result) {
+    const policy = result.webrtc !== false ? 'default_public_interface_only' : 'default';
+    if (chrome.privacy && chrome.privacy.network && chrome.privacy.network.webRTCIPHandlingPolicy) {
+      chrome.privacy.network.webRTCIPHandlingPolicy.set({ value: policy }, function () {
+        if (chrome.runtime.lastError) {
+          console.error('Privacy Shield: Error setting WebRTC policy:', chrome.runtime.lastError);
+        } else {
+          console.log(`Privacy Shield: WebRTC policy set to ${policy}`);
+        }
+      });
+    }
+  });
+}
 
-// Central function to add a log entry
+// Update policy on startup and when storage changes
+updateWebRTCPolicy();
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.webrtc) {
+    updateWebRTCPolicy();
+  }
+});
+
+// 2. Central function to add a log entry
 function addLogEntry(type, description, url) {
   const logEntry = {
     timestamp: new Date().toISOString(),

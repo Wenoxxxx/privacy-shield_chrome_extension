@@ -56,3 +56,37 @@ HTMLCanvasElement.prototype.toDataURL = function () {
   logToBackground('Fingerprint', description);
   return originalToDataURL.apply(this, arguments);
 };
+
+// --- WebRTC & Media Protection ---
+
+chrome.storage.sync.get(['webrtc'], function (result) {
+  if (result.webrtc !== false) {
+    // 1. Disable WebRTC RTCPeerConnection
+    if (window.RTCPeerConnection || window.webkitRTCPeerConnection) {
+      const msg = 'Blocked WebRTC RTCPeerConnection attempt.';
+      window.RTCPeerConnection = function () {
+        console.log(`Privacy Shield: ${msg}`);
+        logToBackground('Fingerprint', msg);
+        throw new Error('WebRTC is disabled by Privacy Shield');
+      };
+      window.webkitRTCPeerConnection = window.RTCPeerConnection;
+    }
+
+    // 2. Mask Media Devices
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      const originalEnumerateDevices = navigator.mediaDevices.enumerateDevices.bind(navigator.mediaDevices);
+      navigator.mediaDevices.enumerateDevices = function () {
+        logToBackground('Fingerprint', 'Masked Media Device enumeration.');
+        return originalEnumerateDevices().then(devices => {
+          // Return generic device info to prevent hardware-based fingerprinting
+          return devices.map(device => ({
+            deviceId: 'masked',
+            groupId: 'masked',
+            kind: device.kind,
+            label: `Privacy Shield Protected ${device.kind.replace('input', '').replace('output', '')}`
+          }));
+        });
+      };
+    }
+  }
+});

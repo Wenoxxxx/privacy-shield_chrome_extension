@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Shield</title>
     <link rel="stylesheet" href="./css/styles.css">
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet">
 
-    </head>
+</head>
+
 <body>
-    
+
     <div class="container">
 
         <header>
@@ -25,12 +29,12 @@
             <span class="circle-label">Privacy Score</span>
             <div class="circle-progress-container">
                 <svg class="circle-progress" width="120" height="120">
-                <circle class="circle-bg" cx="60" cy="60" r="54" />
-                <circle class="circle-bar" cx="60" cy="60" r="54" />
+                    <circle class="circle-bg" cx="60" cy="60" r="54" />
+                    <circle class="circle-bar" cx="60" cy="60" r="54" />
                 </svg>
 
                 <div class="circle-score">
-                <span id="privacy-score">100</span>
+                    <span id="privacy-score">100</span>
                 </div>
             </div>
         </div>
@@ -38,7 +42,7 @@
         <!-- SETTINGS SECTION WITH TOGGLES -->
         <div class="settings-section">
             <h2>Privacy Settings</h2>
-            
+
             <div class="setting-item">
                 <span>Block Trackers</span>
                 <label class="switch">
@@ -62,6 +66,14 @@
                     <span class="slider round"></span>
                 </label>
             </div>
+
+            <div class="setting-item">
+                <span>Block WebRTC</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-webrtc" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
         </div>
 
         <div class="actions">
@@ -76,4 +88,5 @@
     </footer>
 
 </body>
+
 </html>

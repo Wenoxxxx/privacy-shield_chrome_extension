@@ -3,17 +3,19 @@ document.addEventListener('DOMContentLoaded', function () {
   const toggles = {
     'trackers': document.getElementById('toggle-trackers'),
     'https': document.getElementById('toggle-https'),
-    'fingerprint': document.getElementById('toggle-fingerprint')
+    'fingerprint': document.getElementById('toggle-fingerprint'),
+    'webrtc': document.getElementById('toggle-webrtc') // Added WebRTC toggle
   };
 
-  // Load saved preferences
-  chrome.storage.sync.get(['trackers', 'https', 'fingerprint'], function (result) {
-    // Default to true if not set
+  // Load saved preferences for all toggles from Chrome's sync storage.
+  chrome.storage.sync.get(['trackers', 'https', 'fingerprint', 'webrtc'], function (result) {
+    // Default each toggle to true if its state is not explicitly set in storage.
     for (const key in toggles) {
       if (toggles[key]) {
         toggles[key].checked = result[key] !== false;
       }
     }
+    // Update the UI to reflect the loaded preferences.
     updateUI();
   });
 
@@ -36,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (resetBtn) {
     resetBtn.addEventListener('click', function () {
       // Define the default settings for all toggles.
-      const defaultSettings = { trackers: true, https: true, fingerprint: true };
+      const defaultSettings = { trackers: true, https: true, fingerprint: true, webrtc: true };
       // Save the default settings to Chrome's sync storage.
       chrome.storage.sync.set(defaultSettings, function () {
         // After settings are saved, update the UI toggles to reflect the default state.
@@ -104,20 +106,21 @@ async function calculatePrivacyScore(url) {
 
   // Get current toggle states from storage
   const settings = await new Promise(resolve => {
-    chrome.storage.sync.get(['trackers', 'https', 'fingerprint'], resolve);
+    chrome.storage.sync.get(['trackers', 'https', 'fingerprint', 'webrtc'], resolve);
   });
 
   // Deduct points if features are disabled
-  if (settings.trackers === false) score -= 30;
-  if (settings.https === false) score -= 30;
+  if (settings.trackers === false) score -= 25;
+  if (settings.https === false) score -= 25;
   if (settings.fingerprint === false) score -= 20;
+  if (settings.webrtc === false) score -= 20;
 
   // Deduct points based on URL (e.g., insecure HTTP)
   if (url.startsWith('http://') && settings.https !== false) {
     // If HTTPS upgrade is ON but site is still HTTP, it's a risk or not upgraded yet
-    score -= 10;
+    score -= 5;
   } else if (url.startsWith('http://')) {
-    score -= 20;
+    score -= 10;
   }
 
   return score;
