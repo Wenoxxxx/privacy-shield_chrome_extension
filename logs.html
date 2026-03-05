@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Shield - Activity Logs</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/logs.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container logs-container">
+        <header>
+            <div class="icon">
+                <img src="/assets/icon48.png" alt="Privacy Shield Icon">
+            </div>
+            <h1>Activity Logs</h1>
+            <p class="subtitle">Real-time privacy protection history</p>
+        </header>
+
+        <div class="logs-actions-top">
+            <button id="clear-logs" class="button secondary">CLEAR ALL LOGS</button>
+            <button id="back-to-popup" class="button primary">BACK TO DASHBOARD</button>
+        </div>
+
+        <div class="logs-list-container">
+            <table id="logs-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th>Activity</th>
+                        <th>Website</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-body">
+                    <!-- Logs will be injected here -->
+                </tbody>
+            </table>
+            <div id="no-logs" class="no-logs-message" style="display: none;">
+                <p>No activity recorded yet.</p>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>Privacy Shield protects your data in real-time. | Made with ❤️ by <a href=" ">earnieacts</a></p>
+        </footer>
+    </div>
+    <script src="./js/logs.js"></script>
+</body>
+
+</html>

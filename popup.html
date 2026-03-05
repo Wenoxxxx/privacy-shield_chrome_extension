@@ -35,9 +35,38 @@
             </div>
         </div>
 
+        <!-- SETTINGS SECTION WITH TOGGLES -->
+        <div class="settings-section">
+            <h2>Privacy Settings</h2>
+            
+            <div class="setting-item">
+                <span>Block Trackers</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-trackers" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="setting-item">
+                <span>Upgrade to HTTPS</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-https" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div class="setting-item">
+                <span>Mask Fingerprinting</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-fingerprint" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+
         <div class="actions">
-            <button class="button primary">VIEW DETAILS</button>
-            <button class="button secondary">SETTINGS</button>
+            <button class="button primary">VIEW LOGS</button>
+            <button class="button secondary" id="reset-settings">RESET</button>
         </div>
     </div>
     <script src="./js/popup.js"></script>

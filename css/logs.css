@@ -1,0 +1,116 @@
+/* Logs Page Specific Styles */
+.logs-container {
+    max-width: 800px;
+    /* Wider for desktop viewing */
+    min-height: 500px;
+    margin: 40px auto;
+}
+
+.subtitle {
+    color: #888;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+.logs-actions-top {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.logs-actions-top .button {
+    flex: 0 1 auto;
+    width: 180px;
+    padding: 10px;
+    font-size: 0.85rem;
+}
+
+.logs-list-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+#logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+#logs-table th {
+    background: #f8fafc;
+    padding: 15px;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#logs-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #64748b;
+    vertical-align: middle;
+}
+
+#logs-table tr:hover {
+    background-color: #f8fafc;
+}
+
+.log-type {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.type-tracker {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.type-fingerprint {
+    background: #ffedd5;
+    color: #ea580c;
+}
+
+.type-https {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.log-url {
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.log-url:hover {
+    text-decoration: underline;
+}
+
+.no-logs-message {
+    padding: 50px;
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Response adjustments for narrower viewports */
+@media (max-width: 600px) {
+
+    #logs-table th:nth-child(1),
+    #logs-table td:nth-child(1) {
+        display: none;
+        /* Hide time on very small screens */
+    }
+}
