@@ -4,11 +4,12 @@ document.addEventListener('DOMContentLoaded', function () {
     'trackers': document.getElementById('toggle-trackers'),
     'https': document.getElementById('toggle-https'),
     'fingerprint': document.getElementById('toggle-fingerprint'),
-    'webrtc': document.getElementById('toggle-webrtc') // Added WebRTC toggle
+    'webrtc': document.getElementById('toggle-webrtc'),
+    'geolocation': document.getElementById('toggle-geolocation')
   };
 
   // Load saved preferences for all toggles from Chrome's sync storage.
-  chrome.storage.sync.get(['trackers', 'https', 'fingerprint', 'webrtc'], function (result) {
+  chrome.storage.sync.get(['trackers', 'https', 'fingerprint', 'webrtc', 'geolocation'], function (result) {
     // Default each toggle to true if its state is not explicitly set in storage.
     for (const key in toggles) {
       if (toggles[key]) {
@@ -23,9 +24,23 @@ document.addEventListener('DOMContentLoaded', function () {
   for (const key in toggles) {
     if (toggles[key]) {
       toggles[key].addEventListener('change', function () {
+        const isChecked = this.checked;
         const settings = {};
-        settings[key] = this.checked;
+        settings[key] = isChecked;
         chrome.storage.sync.set(settings);
+
+        // Robust Debugger-based Geolocation Spoofing
+        if (key === 'geolocation') {
+          chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+            if (tabs[0]) {
+              chrome.runtime.sendMessage({
+                action: isChecked ? 'enableGeolocation' : 'disableGeolocation',
+                tabId: tabs[0].id
+              });
+            }
+          });
+        }
+
         updateUI();
       });
     }
@@ -38,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (resetBtn) {
     resetBtn.addEventListener('click', function () {
       // Define the default settings for all toggles.
-      const defaultSettings = { trackers: true, https: true, fingerprint: true, webrtc: true };
+      const defaultSettings = { trackers: true, https: true, fingerprint: true, webrtc: true, geolocation: true };
       // Save the default settings to Chrome's sync storage.
       chrome.storage.sync.set(defaultSettings, function () {
         // After settings are saved, update the UI toggles to reflect the default state.
@@ -106,14 +121,15 @@ async function calculatePrivacyScore(url) {
 
   // Get current toggle states from storage
   const settings = await new Promise(resolve => {
-    chrome.storage.sync.get(['trackers', 'https', 'fingerprint', 'webrtc'], resolve);
+    chrome.storage.sync.get(['trackers', 'https', 'fingerprint', 'webrtc', 'geolocation'], resolve);
   });
 
   // Deduct points if features are disabled
   if (settings.trackers === false) score -= 25;
   if (settings.https === false) score -= 25;
-  if (settings.fingerprint === false) score -= 20;
-  if (settings.webrtc === false) score -= 20;
+  if (settings.fingerprint === false) score -= 15;
+  if (settings.webrtc === false) score -= 15;
+  if (settings.geolocation === false) score -= 10;
 
   // Deduct points based on URL (e.g., insecure HTTP)
   if (url.startsWith('http://') && settings.https !== false) {

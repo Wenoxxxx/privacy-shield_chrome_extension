@@ -8,85 +8,129 @@ function logToBackground(type, description) {
   });
 }
 
-// Spoof User-Agent to a generic one
-Object.defineProperty(navigator, 'userAgent', {
-  get: () => {
-    // Optional: Only log once per session or on change?
-    return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
-  }
-});
+// --- Main World Injection Script ---
+// This function runs in the same context as the website (Main World)
+// to reliably override APIs that are otherwise isolated from content scripts.
+function injectShield(settings) {
+  const log = (type, desc) => {
+    window.dispatchEvent(new CustomEvent('PrivacyShieldLog', {
+      detail: { type, desc }
+    }));
+  };
 
-// Mask Navigator Properties used for fingerprinting
-const navigatorOverrides = {
-  language: 'en-US',
-  languages: ['en-US', 'en'],
-  hardwareConcurrency: 4,
-  deviceMemory: 8,
-  maxTouchPoints: 0,
-  platform: 'Win32'
-};
+  // 1. Stealth Helper: Mimic Native Functions
+  const makeNative = (fn, name) => {
+    Object.defineProperty(fn, 'name', { value: name, configurable: true });
+    return fn;
+  };
 
-for (const [key, value] of Object.entries(navigatorOverrides)) {
-  Object.defineProperty(navigator, key, {
-    get: () => {
-      // Log property access occasionally (not every time to avoid spam)
-      // logToBackground('Fingerprint', `Intercepted access to navigator.${key}`);
-      return value;
+  const originalToString = Function.prototype.toString;
+  Function.prototype.toString = makeNative(function toString() {
+    if (typeof this === 'function' &&
+      (this === navigator.geolocation.getCurrentPosition ||
+        this === navigator.geolocation.watchPosition ||
+        (navigator.permissions && this === navigator.permissions.query))) {
+      return `function ${this.name}() { [native code] }`;
     }
-  });
+    return originalToString.call(this);
+  }, 'toString');
+
+  // 2. Fingerprinting Protection
+  if (settings.fingerprint !== false) {
+    // Spoof User-Agent & Platform
+    const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
+    Object.defineProperty(navigator, 'userAgent', { get: () => ua, configurable: true });
+    Object.defineProperty(navigator, 'appVersion', { get: () => ua.substring(8), configurable: true });
+    Object.defineProperty(navigator, 'platform', { get: () => 'Win32', configurable: true });
+
+    // Mask Navigator Properties
+    const overrides = { language: 'en-US', languages: ['en-US', 'en'], hardwareConcurrency: 4, deviceMemory: 8, maxTouchPoints: 0 };
+    for (const [key, value] of Object.entries(overrides)) {
+      Object.defineProperty(navigator, key, { get: () => value, configurable: true });
+    }
+
+    // Canvas Protection
+    const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
+    HTMLCanvasElement.prototype.toDataURL = makeNative(function toDataURL() {
+      log('Fingerprint', 'Blocked canvas fingerprinting attempt.');
+      return originalToDataURL.apply(this, arguments);
+    }, 'toDataURL');
+  }
+
+  // 3. Geolocation Protection (Stealth)
+  if (settings.geolocation !== false) {
+    const spoofedPos = {
+      coords: {
+        latitude: 37.7749,
+        longitude: -122.4194,
+        accuracy: 12.5,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null
+      },
+      timestamp: Date.now()
+    };
+
+    navigator.geolocation.getCurrentPosition = makeNative((success, error, options) => {
+      log('Geolocation', 'Intercepted getCurrentPosition -> returning San Francisco');
+      if (typeof success === 'function') {
+        setTimeout(() => success(spoofedPos), 0);
+      }
+    }, 'getCurrentPosition');
+
+    navigator.geolocation.watchPosition = makeNative((success, error, options) => {
+      log('Geolocation', 'Intercepted watchPosition -> returning San Francisco');
+      if (typeof success === 'function') {
+        setTimeout(() => success(spoofedPos), 0);
+      }
+      return Math.floor(Math.random() * 1000) + 1;
+    }, 'watchPosition');
+
+    if (navigator.permissions && navigator.permissions.query) {
+      const originalQuery = navigator.permissions.query.bind(navigator.permissions);
+      navigator.permissions.query = makeNative(function query(queryObject) {
+        if (queryObject && queryObject.name === 'geolocation') {
+          log('Geolocation', 'Intercepted permission query -> granting access');
+          return Promise.resolve({ state: 'granted', onchange: null });
+        }
+        return originalQuery(queryObject);
+      }, 'query');
+    }
+  }
+
+  // 4. WebRTC & Media Protection
+  if (settings.webrtc !== false) {
+    if (window.RTCPeerConnection) {
+      window.RTCPeerConnection = makeNative(function RTCPeerConnection() {
+        log('Fingerprint', 'Blocked WebRTC attempt.');
+        throw new Error('WebRTC disabled by Privacy Shield');
+      }, 'RTCPeerConnection');
+    }
+
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      const originalEnum = navigator.mediaDevices.enumerateDevices.bind(navigator.mediaDevices);
+      navigator.mediaDevices.enumerateDevices = makeNative(function enumerateDevices() {
+        log('Fingerprint', 'Masked Media Devices.');
+        return originalEnum().then(devices => devices.map(d => ({
+          deviceId: 'masked', groupId: 'masked', kind: d.kind, label: `Privacy Shield Protected ${d.kind}`
+        })));
+      }, 'enumerateDevices');
+    }
+  }
 }
 
-// Spoof Geolocation to a generic location
-navigator.geolocation.getCurrentPosition = function (success, error) {
-  logToBackground('Fingerprint', 'Intercepted geolocation request.');
-  success({
-    coords: {
-      latitude: 37.7749, // Fake latitude (San Francisco)
-      longitude: -122.4194 // Fake longitude
-    }
-  });
-};
+// --- Isolated World Logic ---
+// Fetch settings and inject the shield into the Main World
+chrome.storage.sync.get(['fingerprint', 'webrtc', 'geolocation'], function (settings) {
+  const script = document.createElement('script');
+  script.textContent = `(${injectShield.toString()})(${JSON.stringify(settings)});`;
+  // At document_start, document.head might be null, but document.documentElement is available
+  (document.head || document.documentElement).appendChild(script);
+  script.remove();
+});
 
-// Basic Canvas Fingerprinting Protection
-// This script intercepts calls to toDataURL to prevent canvas fingerprinting
-const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
-HTMLCanvasElement.prototype.toDataURL = function () {
-  const description = 'Blocked canvas fingerprinting attempt.';
-  console.log(`Privacy Shield: ${description}`);
-  logToBackground('Fingerprint', description);
-  return originalToDataURL.apply(this, arguments);
-};
-
-// --- WebRTC & Media Protection ---
-
-chrome.storage.sync.get(['webrtc'], function (result) {
-  if (result.webrtc !== false) {
-    // 1. Disable WebRTC RTCPeerConnection
-    if (window.RTCPeerConnection || window.webkitRTCPeerConnection) {
-      const msg = 'Blocked WebRTC RTCPeerConnection attempt.';
-      window.RTCPeerConnection = function () {
-        console.log(`Privacy Shield: ${msg}`);
-        logToBackground('Fingerprint', msg);
-        throw new Error('WebRTC is disabled by Privacy Shield');
-      };
-      window.webkitRTCPeerConnection = window.RTCPeerConnection;
-    }
-
-    // 2. Mask Media Devices
-    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-      const originalEnumerateDevices = navigator.mediaDevices.enumerateDevices.bind(navigator.mediaDevices);
-      navigator.mediaDevices.enumerateDevices = function () {
-        logToBackground('Fingerprint', 'Masked Media Device enumeration.');
-        return originalEnumerateDevices().then(devices => {
-          // Return generic device info to prevent hardware-based fingerprinting
-          return devices.map(device => ({
-            deviceId: 'masked',
-            groupId: 'masked',
-            kind: device.kind,
-            label: `Privacy Shield Protected ${device.kind.replace('input', '').replace('output', '')}`
-          }));
-        });
-      };
-    }
-  }
+// Listen for log events from the Main World and forward them to the background
+window.addEventListener('PrivacyShieldLog', (event) => {
+  logToBackground(event.detail.type, event.detail.desc);
 });

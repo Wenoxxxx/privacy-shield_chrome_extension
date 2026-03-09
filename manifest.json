@@ -5,11 +5,11 @@
     "description": "Enhance your privacy by blocking trackers, preventing fingerprinting, and spoofing data.",
     "permissions": [
         "webRequest",
-        "webRequestBlocking",
         "storage",
         "declarativeNetRequest",
         "activeTab",
-        "privacy"
+        "privacy",
+        "debugger"
     ],
     "background": {
         "service_worker": "./js/background.js"
@@ -24,13 +24,17 @@
         "128": "./assets/icon128.png"
     },
     "content_scripts": [
-      {
-        "matches": ["<all_urls>"],
-        "js": ["./js/content.js"]
-      }
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "./js/content.js"
+            ],
+            "run_at": "document_start"
+        }
     ],
     "host_permissions": [
         "<all_urls>"
     ]
-  }
-  
+}

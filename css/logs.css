@@ -84,6 +84,11 @@
     color: #16a34a;
 }
 
+.type-geolocation {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
 .log-url {
     max-width: 250px;
     overflow: hidden;
