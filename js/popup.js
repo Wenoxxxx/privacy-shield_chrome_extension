@@ -1,143 +1,110 @@
-document.addEventListener('DOMContentLoaded', function () {
-  // 1. Initialize Toggles from Storage
-  const toggles = {
-    'trackers': document.getElementById('toggle-trackers'),
-    'https': document.getElementById('toggle-https'),
-    'fingerprint': document.getElementById('toggle-fingerprint'),
-    'webrtc': document.getElementById('toggle-webrtc'),
-    'geolocation': document.getElementById('toggle-geolocation')
+import { STORAGE_KEYS, DEFAULT_SETTINGS, MESSAGE_ACTIONS } from './const/defaults.js';
+import { storage } from './storage.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const UI = {
+    toggles: {
+      [STORAGE_KEYS.TRACKERS]: document.getElementById('toggle-trackers'),
+      [STORAGE_KEYS.HTTPS]: document.getElementById('toggle-https'),
+      [STORAGE_KEYS.FINGERPRINT]: document.getElementById('toggle-fingerprint'),
+      [STORAGE_KEYS.WEBRTC]: document.getElementById('toggle-webrtc'),
+      [STORAGE_KEYS.GEOLOCATION]: document.getElementById('toggle-geolocation')
+    },
+    resetBtn: document.getElementById('reset-settings'),
+    viewLogsBtn: document.querySelector('.button.primary'),
+    scoreElem: document.getElementById('privacy-score'),
+    circleBar: document.querySelector('.circle-bar')
   };
 
-  // Load saved preferences for all toggles from Chrome's sync storage.
-  chrome.storage.sync.get(['trackers', 'https', 'fingerprint', 'webrtc', 'geolocation'], function (result) {
-    // Default each toggle to true if its state is not explicitly set in storage.
-    for (const key in toggles) {
-      if (toggles[key]) {
-        toggles[key].checked = result[key] !== false;
-      }
-    }
-    // Update the UI to reflect the loaded preferences.
-    updateUI();
-  });
+  // --- 1. Initialization ---
+  const settings = await storage.getSync(Object.values(STORAGE_KEYS));
 
-  // 2. Add Event Listeners for Toggles
-  for (const key in toggles) {
-    if (toggles[key]) {
-      toggles[key].addEventListener('change', function () {
-        const isChecked = this.checked;
-        const settings = {};
-        settings[key] = isChecked;
-        chrome.storage.sync.set(settings);
+  for (const [key, element] of Object.entries(UI.toggles)) {
+    if (element) {
+      element.checked = settings[key] !== false;
 
-        // Robust Debugger-based Geolocation Spoofing
-        if (key === 'geolocation') {
-          chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-            if (tabs[0]) {
-              chrome.runtime.sendMessage({
-                action: isChecked ? 'enableGeolocation' : 'disableGeolocation',
-                tabId: tabs[0].id
-              });
-            }
-          });
+      // Add Change Listener
+      element.addEventListener('change', async (e) => {
+        const isChecked = e.target.checked;
+        await storage.setSync({ [key]: isChecked });
+
+        // Special handling for Geolocation Debugger
+        if (key === STORAGE_KEYS.GEOLOCATION) {
+          const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+          if (tab) {
+            chrome.runtime.sendMessage({
+              action: isChecked ? MESSAGE_ACTIONS.ENABLE_GEOLOCATION : MESSAGE_ACTIONS.DISABLE_GEOLOCATION,
+              tabId: tab.id
+            });
+          }
         }
-
         updateUI();
       });
     }
   }
 
-  // 3. Reset Button Logic
-  // Get the reset button element.
-  const resetBtn = document.getElementById('reset-settings');
-  // If the reset button exists, attach a click event listener.
-  if (resetBtn) {
-    resetBtn.addEventListener('click', function () {
-      // Define the default settings for all toggles.
-      const defaultSettings = { trackers: true, https: true, fingerprint: true, webrtc: true, geolocation: true };
-      // Save the default settings to Chrome's sync storage.
-      chrome.storage.sync.set(defaultSettings, function () {
-        // After settings are saved, update the UI toggles to reflect the default state.
-        for (const key in toggles) {
-          if (toggles[key]) toggles[key].checked = true;
-        }
-        // Finally, update the overall UI (e.g., privacy score).
-        updateUI();
-      });
+  // --- 2. Action Handlers ---
+  if (UI.resetBtn) {
+    UI.resetBtn.addEventListener('click', async () => {
+      await storage.setSync(DEFAULT_SETTINGS);
+      for (const key in UI.toggles) {
+        if (UI.toggles[key]) UI.toggles[key].checked = true;
+      }
+      updateUI();
     });
   }
 
-  // 4. View Logs Button Logic
-  // Get the "VIEW LOGS" button element. Assuming it has classes 'button' and 'primary'.
-  const viewLogsBtn = document.querySelector('.button.primary');
-  // If the button exists, attach a click event listener.
-  if (viewLogsBtn) {
-    viewLogsBtn.addEventListener('click', function () {
-      // When clicked, open 'logs.html' in a new tab.
+  if (UI.viewLogsBtn) {
+    UI.viewLogsBtn.addEventListener('click', () => {
       chrome.tabs.create({ url: 'logs.html' });
     });
   }
 
-  // Function to update the UI, primarily the privacy score.
-  function updateUI() {
-    // Query for the active tab in the current window.
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      // If an active tab is found.
-      if (tabs[0]) {
-        // Calculate the privacy score for the current tab's URL.
-        calculatePrivacyScore(tabs[0].url).then(score => {
-          // Once the score is calculated, display it in the UI.
-          setPrivacyScore(score);
-        });
-      }
-    });
+  // --- 3. UI Update Logic ---
+  async function updateUI() {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab) {
+      const score = await calculatePrivacyScore(tab.url);
+      setPrivacyScore(score);
+    }
   }
+
+  function setPrivacyScore(score) {
+    if (UI.scoreElem) UI.scoreElem.textContent = score;
+
+    const radius = 54;
+    const circumference = 2 * Math.PI * radius;
+    const percent = Math.max(0, Math.min(100, score));
+    const offset = circumference * (1 - percent / 100);
+
+    if (UI.circleBar) {
+      UI.circleBar.style.strokeDasharray = `${circumference}`;
+      UI.circleBar.style.strokeDashoffset = offset;
+
+      // Color coding
+      if (score > 80) UI.circleBar.style.stroke = "#28a745";
+      else if (score > 50) UI.circleBar.style.stroke = "#ffc107";
+      else UI.circleBar.style.stroke = "#dc3545";
+    }
+  }
+
+  async function calculatePrivacyScore(url) {
+    let score = 100;
+    const s = await storage.getSync(Object.values(STORAGE_KEYS));
+
+    if (s[STORAGE_KEYS.TRACKERS] === false) score -= 25;
+    if (s[STORAGE_KEYS.HTTPS] === false) score -= 25;
+    if (s[STORAGE_KEYS.FINGERPRINT] === false) score -= 15;
+    if (s[STORAGE_KEYS.WEBRTC] === false) score -= 15;
+    if (s[STORAGE_KEYS.GEOLOCATION] === false) score -= 10;
+
+    if (url.startsWith('http://')) {
+      score -= (s[STORAGE_KEYS.HTTPS] !== false) ? 5 : 10;
+    }
+
+    return score;
+  }
+
+  // Initial UI Render
+  updateUI();
 });
-
-function setPrivacyScore(score) {
-  // Set the score text
-  const scoreElem = document.getElementById('privacy-score');
-  if (scoreElem) scoreElem.textContent = score;
-
-  // Animate the circle progress
-  const circle = document.querySelector('.circle-bar');
-  const radius = 54;
-  const circumference = 2 * Math.PI * radius;
-  const percent = Math.max(0, Math.min(100, score));
-  const offset = circumference * (1 - percent / 100);
-
-  if (circle) {
-    circle.style.strokeDasharray = `${circumference}`;
-    circle.style.strokeDashoffset = offset;
-
-    // Change color based on score
-    if (score > 80) circle.style.stroke = "#28a745"; // Green
-    else if (score > 50) circle.style.stroke = "#ffc107"; // Yellow
-    else circle.style.stroke = "#dc3545"; // Red
-  }
-}
-
-async function calculatePrivacyScore(url) {
-  let score = 100;
-
-  // Get current toggle states from storage
-  const settings = await new Promise(resolve => {
-    chrome.storage.sync.get(['trackers', 'https', 'fingerprint', 'webrtc', 'geolocation'], resolve);
-  });
-
-  // Deduct points if features are disabled
-  if (settings.trackers === false) score -= 25;
-  if (settings.https === false) score -= 25;
-  if (settings.fingerprint === false) score -= 15;
-  if (settings.webrtc === false) score -= 15;
-  if (settings.geolocation === false) score -= 10;
-
-  // Deduct points based on URL (e.g., insecure HTTP)
-  if (url.startsWith('http://') && settings.https !== false) {
-    // If HTTPS upgrade is ON but site is still HTTP, it's a risk or not upgraded yet
-    score -= 5;
-  } else if (url.startsWith('http://')) {
-    score -= 10;
-  }
-
-  return score;
-}
