@@ -1,12 +1,11 @@
 # 🛡️ Privacy Shield Chrome Extension 
 
-Privacy Shield is a Chrome extension designed to enhance your privacy while browsing the web. It automatically blocks trackers, prevents fingerprinting, and spoofs data like location or user-agent. The extension also features a real-time privacy score that shows how protected you are on each website you visit.
+Privacy Shield is a Chrome extension designed to enhance your privacy while browsing the web. It automatically blocks trackers and spoofs data like location. The extension also features a real-time privacy score that shows how protected you are on each website you visit.
 
 ## Features
 
 - **Tracker Blocking**: Automatically blocks known trackers to protect your privacy.
-- **Fingerprinting Prevention**: Prevents websites from collecting unique data to fingerprint your device.
-- **Data Spoofing**: Spoofs sensitive information like location and user-agent to enhance anonymity.
+- **Data Spoofing**: Spoofs sensitive information like location to enhance anonymity.
 - **Real-Time Privacy Score**: Displays a privacy score in real-time, showing how protected you are on each website.
 
 ## 🚀 Installation

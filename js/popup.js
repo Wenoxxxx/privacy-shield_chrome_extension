@@ -5,9 +5,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const UI = {
     toggles: {
       [STORAGE_KEYS.TRACKERS]: document.getElementById('toggle-trackers'),
-      [STORAGE_KEYS.HTTPS]: document.getElementById('toggle-https'),
-      [STORAGE_KEYS.FINGERPRINT]: document.getElementById('toggle-fingerprint'),
-      [STORAGE_KEYS.WEBRTC]: document.getElementById('toggle-webrtc'),
       [STORAGE_KEYS.GEOLOCATION]: document.getElementById('toggle-geolocation')
     },
     resetBtn: document.getElementById('reset-settings'),
@@ -93,14 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const s = await storage.getSync(Object.values(STORAGE_KEYS));
 
     if (s[STORAGE_KEYS.TRACKERS] === false) score -= 25;
-    if (s[STORAGE_KEYS.HTTPS] === false) score -= 25;
-    if (s[STORAGE_KEYS.FINGERPRINT] === false) score -= 15;
-    if (s[STORAGE_KEYS.WEBRTC] === false) score -= 15;
     if (s[STORAGE_KEYS.GEOLOCATION] === false) score -= 10;
-
-    if (url.startsWith('http://')) {
-      score -= (s[STORAGE_KEYS.HTTPS] !== false) ? 5 : 10;
-    }
 
     return score;
   }

@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Privacy Shield",
     "version": "1.0",
-    "description": "Enhance your privacy by blocking trackers, preventing fingerprinting, and spoofing data.",
+    "description": "Enhance your privacy by blocking trackers and spoofing location data.",
     "permissions": [
         "webRequest",
         "storage",

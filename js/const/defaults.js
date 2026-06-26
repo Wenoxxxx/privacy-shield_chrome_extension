@@ -1,17 +1,11 @@
 export const STORAGE_KEYS = {
   TRACKERS: 'trackers',
-  HTTPS: 'https',
-  FINGERPRINT: 'fingerprint',
-  WEBRTC: 'webrtc',
   GEOLOCATION: 'geolocation',
   PRIVACY_LOGS: 'privacyLogs'
 };
 
 export const DEFAULT_SETTINGS = {
   [STORAGE_KEYS.TRACKERS]: true,
-  [STORAGE_KEYS.HTTPS]: true,
-  [STORAGE_KEYS.FINGERPRINT]: true,
-  [STORAGE_KEYS.WEBRTC]: true,
   [STORAGE_KEYS.GEOLOCATION]: true
 };
 
@@ -23,8 +17,6 @@ export const MESSAGE_ACTIONS = {
 
 export const LOG_TYPES = {
   TRACKER: 'Tracker',
-  FINGERPRINT: 'Fingerprint',
-  HTTPS: 'HTTPS',
   GEOLOCATION: 'Geolocation'
 };
 

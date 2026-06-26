@@ -8,31 +8,7 @@ chrome.declarativeNetRequest.updateDynamicRules({
   removeRuleIds: NETWORK_RULES.map(rule => rule.id)
 });
 
-// --- 2. Privacy Policy Management ---
-async function updateWebRTCPolicy() {
-  const result = await storage.getSync(STORAGE_KEYS.WEBRTC);
-  const policy = result[STORAGE_KEYS.WEBRTC] !== false ? 'default_public_interface_only' : 'default';
-
-  if (chrome.privacy?.network?.webRTCIPHandlingPolicy) {
-    chrome.privacy.network.webRTCIPHandlingPolicy.set({ value: policy }, () => {
-      if (chrome.runtime.lastError) {
-        console.error('Privacy Shield: Error setting WebRTC policy:', chrome.runtime.lastError);
-      } else {
-        console.log(`Privacy Shield: WebRTC policy set to ${policy}`);
-      }
-    });
-  }
-}
-
-// Initialize and listen for changes
-updateWebRTCPolicy();
-storage.onChanged((changes) => {
-  if (changes[STORAGE_KEYS.WEBRTC]) {
-    updateWebRTCPolicy();
-  }
-});
-
-// --- 3. Activity Logging ---
+// --- 2. Activity Logging ---
 async function addLogEntry(type, description, url) {
   const logEntry = {
     timestamp: new Date().toISOString(),
@@ -49,7 +25,7 @@ async function addLogEntry(type, description, url) {
   await storage.setLocal({ [STORAGE_KEYS.PRIVACY_LOGS]: logs.slice(0, 100) });
 }
 
-// --- 4. Geolocation Spoofing (Debugger API) ---
+// --- 3. Geolocation Spoofing (Debugger API) ---
 function enableGeolocationOverride(tabId) {
   const target = { tabId: tabId };
 
@@ -96,7 +72,7 @@ function disableGeolocationOverride(tabId) {
   });
 }
 
-// --- 5. Message Listeners ---
+// --- 4. Message Listeners ---
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.action) {
     case MESSAGE_ACTIONS.LOG_ACTIVITY:
